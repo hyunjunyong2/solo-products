@@ -165,6 +165,9 @@ async function onSave() {
               <span class="badge">{{ grid.length }}행</span>
             </p>
           </div>
+          <p class="border-t border-gray-100 px-4 py-3 text-xs text-gray-500 md:px-5">
+            새로고침하면 불러온 내역은 사라집니다. 분류 규칙과 매핑 프로필은 이 브라우저에 유지됩니다.
+          </p>
         </section>
 
         <section v-if="grid.length" class="card">
