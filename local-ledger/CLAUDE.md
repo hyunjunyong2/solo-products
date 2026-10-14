@@ -21,13 +21,14 @@
 Nuxt 4 (`ssr: false`) 정적 사이트, PapaParse, SheetJS(읽기, cdn.sheetjs.com tarball로 설치), TextDecoder('euc-kr'), Dexie, Tailwind v4(시스템 폰트만)
 
 ## Phase
-- **Phase 1**: 업로드 + 인코딩 + 컬럼 매핑 + 거래표
-- Phase 2: 규칙 엔진 + 미분류 큐 + 수정→규칙 저장
+- Phase 1: 업로드 + 인코딩 + 컬럼 매핑 + 거래표 (완료)
+- **Phase 2**: 규칙 엔진 + 미분류 큐 + 수정→규칙 저장
 - Phase 3: 월별 요약 + 합계 검증 + 내보내기
 
 ## 데이터 규칙
 - 금액은 원 단위 정수. 수입 +, 지출 −. 빈 값은 `null`(합계 제외, 개수 표시)
-- IndexedDB에는 매핑 프로필만 저장한다. 거래 데이터는 저장하지 않는다
+- IndexedDB에는 매핑 프로필과 분류 규칙(`pattern`, `category`)만 저장한다. 날짜·금액 등 거래 데이터는 저장하지 않는다
+  - 규칙 `pattern`에는 가맹점 문자열이 들어간다. 규칙 JSON 내보내기 파일도 마찬가지
 - 실제 명세서는 `private-samples/`에만 둔다 (git 무시)
 - `fixtures/`는 `pnpm fixtures`(scripts/make-fixtures.ts)로 생성한 가짜 데이터만
 

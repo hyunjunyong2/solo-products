@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { MappedResult } from '~/lib/types'
 
-defineProps<{ result: MappedResult }>()
+defineProps<{ result: MappedResult; categories: (string | null)[] }>()
+const emit = defineEmits<{ classify: [merchant: string, category: string] }>()
 const won = (n: number) => n.toLocaleString('ko-KR')
 </script>
 
@@ -22,6 +23,7 @@ const won = (n: number) => n.toLocaleString('ko-KR')
             <th class="px-4 py-2.5 font-medium md:px-5">날짜</th>
             <th class="px-4 py-2.5 font-medium md:px-5">가맹점</th>
             <th class="px-4 py-2.5 text-right font-medium md:px-5">금액</th>
+            <th class="px-4 py-2.5 font-medium md:px-5">분류</th>
           </tr>
         </thead>
         <tbody>
@@ -34,12 +36,24 @@ const won = (n: number) => n.toLocaleString('ko-KR')
             >
               {{ t.amount == null ? '' : won(t.amount) }}
             </td>
+            <td class="px-4 py-1.5 md:px-5">
+              <input
+                :value="categories[i] ?? ''"
+                :disabled="!t.merchant"
+                :aria-label="`${t.merchant} 분류`"
+                list="category-options"
+                placeholder="미분류"
+                class="input h-8 w-full min-w-28"
+                @change="emit('classify', t.merchant, ($event.target as HTMLInputElement).value)"
+              >
+            </td>
           </tr>
         </tbody>
         <tfoot class="sticky bottom-0 bg-white">
           <tr class="border-t-2 border-gray-200 font-semibold">
             <td class="px-4 py-3 md:px-5" colspan="2">합계</td>
             <td class="px-4 py-3 text-right tabular-nums md:px-5" data-testid="total">{{ won(result.total) }}</td>
+            <td />
           </tr>
         </tfoot>
       </table>

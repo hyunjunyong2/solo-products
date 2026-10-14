@@ -27,3 +27,10 @@ export interface MappedResult {
   /** 날짜를 인식하지 못해 제외된 행 수 (합계 행·안내 문구 등) */
   skipped: number
 }
+
+export interface Rule {
+  id?: number
+  /** 가맹점 문자열에 포함되면 매칭 (공백·대소문자 무시) */
+  pattern: string
+  category: string
+}
