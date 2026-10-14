@@ -1,0 +1,36 @@
+{
+  "name": "local-ledger",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "postinstall": "nuxt prepare",
+    "fixtures": "tsx scripts/make-fixtures.ts",
+    "test": "vitest run",
+    "e2e": "nuxt generate && playwright test"
+  },
+  "dependencies": {
+    "dexie": "^4.4.6",
+    "nuxt": "~4.5.2",
+    "papaparse": "^5.7.0",
+    "vue": "^3.5.44",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/papaparse": "^5.5.2",
+    "iconv-lite": "^0.7.3",
+    "serve": "^14.2.6",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

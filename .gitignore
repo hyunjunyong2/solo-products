@@ -1,0 +1,20 @@
+node_modules/
+.nuxt/
+.output/
+dist
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+test-results/
+playwright-report/
+
+# 실제 금융 데이터: 절대 커밋 금지
+local-ledger/private-samples/
+
+# 2차 방어: fixtures 밖의 표 파일은 전부 무시
+*.csv
+*.xls
+*.xlsx
+!local-ledger/fixtures/**

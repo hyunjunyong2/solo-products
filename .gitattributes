@@ -1,0 +1,2 @@
+# fixtures는 바이트 그대로 보존 (CRLF·EUC-KR 재현용)
+local-ledger/fixtures/** -text
