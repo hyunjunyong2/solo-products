@@ -53,4 +53,8 @@ describe.each(cases)('$file', ({ file, encoding, mapping }) => {
     expect(result.rows).toHaveLength(exp.rows)
     expect(result.total).toBe(exp.total)
   })
+
+  it('파일 안 합계 행 감지 (카드 CSV만 합계 행이 있음)', () => {
+    expect(result.sourceTotal).toBe(file === 'card-euckr.csv' ? exp.total : null)
+  })
 })

@@ -26,6 +26,8 @@ export interface MappedResult {
   missingAmount: number
   /** 날짜를 인식하지 못해 제외된 행 수 (합계 행·안내 문구 등) */
   skipped: number
+  /** 제외된 행 중 금액이 읽히는 마지막 행 = 파일 안 합계 행 후보. 없으면 null */
+  sourceTotal: number | null
 }
 
 export interface Rule {

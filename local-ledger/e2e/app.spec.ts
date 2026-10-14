@@ -1,5 +1,6 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
+import Papa from 'papaparse'
 import expected from '../fixtures/expected.json' with { type: 'json' }
 
 const ORIGIN = 'http://localhost:4173'
@@ -178,4 +179,74 @@ test('규칙 JSON 내보내기 → 삭제 → 가져오기', async ({ page }) =>
   await page.getByLabel('JSON 가져오기').setInputFiles(file)
   await expect(page.getByTestId('rules-message')).toHaveText('가져오기 완료: 추가 2 · 갱신 0 · 무시 0')
   await expect(nav(page, /^미분류/)).toHaveText(/6/)
+})
+
+const cells = (row: Locator) => row.locator('td')
+
+test('월별 요약: 카드 CSV 원본 합계 일치·불일치, CSV 내보내기', async ({ page }) => {
+  const exp = expected['card-euckr.csv']
+  await loadCardCsv(page)
+  await nav(page, /^미분류/).click()
+  await classifyIn(page, '테스트카페 분류', '카페')
+
+  await nav(page, /^월별 요약/).click()
+  await expect(page.getByTestId('month-row')).toHaveCount(1)
+  await expect(cells(page.getByTestId('month-row'))).toHaveText(['2026-09', '20', /\d/, /-/, won(exp.total)])
+  await expect(page.getByTestId('kpi-net')).toHaveText(won(exp.total))
+  await expect(page.getByTestId('consistency-check')).toContainText('✅')
+  await expect(page.getByTestId('source-check')).toContainText('✅ 원본 합계 일치')
+
+  await page.getByLabel('명세서 총액').fill('300,000')
+  await expect(page.getByTestId('source-check')).toHaveText(`❌ 원본 합계 불일치 · 차이 ${won(-exp.total - 300_000)}`)
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'CSV 내보내기' }).click(),
+  ])
+  expect(download.suggestedFilename()).toBe('card-euckr-분류.csv')
+  const text = readFileSync(await download.path(), 'utf8')
+  expect(text.startsWith('﻿')).toBe(true)
+  const { data } = Papa.parse<string[]>(text.slice(1), { skipEmptyLines: true })
+  const [header, ...rows] = data
+  expect(header).toEqual(['날짜', '가맹점', '금액', '분류'])
+  expect(rows).toHaveLength(exp.rows)
+  expect(rows.reduce((s, r) => s + Number(r[2]), 0)).toBe(exp.total)
+  for (const r of rows) expect(r[3]).toBe(r[1] === '테스트카페' ? '카페' : '')
+})
+
+test('월별 요약: 2개월 CSV의 월별·분류별 합계, 원본 합계 없음 안내', async ({ page }) => {
+  const csv = [
+    '날짜,내용,금액',
+    '2026-08-30,가짜급여,3000000',
+    '2026-08-31,테스트카페,-4500',
+    '2026-09-01,테스트카페,-5000',
+    '2026-09-02,샘플마트,-20000',
+    '2026-09-03,샘플마트 환불,1000',
+  ].join('\n')
+  await page.goto('/')
+  await page.locator('input[type=file]').setInputFiles({ name: 'two-months.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) })
+  await page.getByLabel('날짜', { exact: true }).selectOption({ label: '1열: 날짜' })
+  await page.getByLabel('가맹점', { exact: true }).selectOption({ label: '2열: 내용' })
+  await page.getByLabel('금액', { exact: true }).selectOption({ label: '3열: 금액' })
+
+  await nav(page, /^미분류/).click()
+  await classifyIn(page, '테스트카페 분류', '카페')
+  await classifyIn(page, '가짜급여 분류', '급여')
+
+  await nav(page, /^월별 요약/).click()
+  const months = page.getByTestId('month-row')
+  await expect(months).toHaveCount(2)
+  await expect(cells(months.nth(0))).toHaveText(['2026-08', '2', '3,000,000', '-4,500', '2,995,500'])
+  await expect(cells(months.nth(1))).toHaveText(['2026-09', '3', '1,000', '-25,000', '-24,000'])
+
+  const cats = page.getByTestId('category-row')
+  await expect(cats).toHaveCount(3)
+  await expect(cells(cats.nth(0))).toHaveText(['카페', '-4,500', '-5,000', '-9,500'])
+  await expect(cells(cats.nth(1))).toHaveText(['급여', '3,000,000', '-', '3,000,000'])
+  await expect(cells(cats.nth(2))).toHaveText(['미분류', '-', '-19,000', '-19,000'])
+
+  await expect(page.getByTestId('consistency-check')).toContainText('✅')
+  await expect(page.getByTestId('source-check')).toHaveText('비교할 원본 합계가 없습니다. 명세서 총액을 입력하세요')
+  await page.getByLabel('명세서 총액').fill('2971500')
+  await expect(page.getByTestId('source-check')).toContainText('✅ 원본 합계 일치')
 })

@@ -25,10 +25,12 @@ export function mapRows(grid: Grid, m: Mapping): MappedResult {
   let total = 0
   let missingAmount = 0
   let skipped = 0
+  let sourceTotal: number | null = null
   for (const row of grid.slice(m.headerRow)) {
     const date = parseDate(row[m.date] ?? '')
     if (!date) {
       skipped++
+      sourceTotal = rowAmount(row, m) ?? sourceTotal
       continue
     }
     const amount = rowAmount(row, m)
@@ -36,5 +38,5 @@ export function mapRows(grid: Grid, m: Mapping): MappedResult {
     else total += amount
     rows.push({ date, merchant: (row[m.merchant] ?? '').trim(), amount })
   }
-  return { rows, total, missingAmount, skipped }
+  return { rows, total, missingAmount, skipped, sourceTotal }
 }

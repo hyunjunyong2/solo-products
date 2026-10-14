@@ -5,8 +5,13 @@ import { readTable } from '~/lib/readTable'
 import { classify, groupUnclassified } from '~/lib/rules'
 import type { Grid, Mapping, Rule } from '~/lib/types'
 
-type View = 'import' | 'rules' | 'unclassified'
-const titles: Record<View, string> = { import: '내역 가져오기', rules: '분류 규칙', unclassified: '미분류' }
+type View = 'import' | 'rules' | 'unclassified' | 'summary'
+const titles: Record<View, string> = {
+  import: '내역 가져오기',
+  rules: '분류 규칙',
+  unclassified: '미분류',
+  summary: '월별 요약',
+}
 
 const emptyMapping = (): Mapping => ({
   headerRow: 1,
@@ -34,6 +39,7 @@ const nav = computed(() => [
   { view: 'import' as const, badge: null },
   { view: 'rules' as const, badge: null },
   { view: 'unclassified' as const, badge: result.value ? unclassified.value.length : null },
+  { view: 'summary' as const, badge: null },
 ])
 
 async function loadProfiles() {
@@ -114,13 +120,6 @@ async function onSave() {
           {{ titles[item.view] }}
           <span v-if="item.badge" class="rounded-full bg-blue-600 px-2 text-xs text-white">{{ item.badge }}</span>
         </button>
-        <span
-          class="flex cursor-not-allowed items-center justify-between rounded-md px-3 py-2 text-gray-500"
-          aria-disabled="true"
-        >
-          월별 요약
-          <span class="text-xs">준비 중</span>
-        </span>
       </nav>
       <p class="px-5 py-4 text-xs leading-relaxed text-gray-500">
         파일은 브라우저 안에서만 처리되며 어디로도 전송되지 않습니다.
@@ -200,11 +199,12 @@ async function onSave() {
         <TransactionTable v-if="result" :result="result" :categories="categories" @classify="onClassify" />
       </main>
 
-      <main v-else-if="view === 'unclassified'" class="flex-1 p-4 md:p-6">
-        <UnclassifiedQueue v-if="result" :groups="unclassified" @classify="onClassify" />
-        <p v-else class="card px-4 py-8 text-center text-sm text-gray-500">
+      <main v-else-if="view === 'unclassified' || view === 'summary'" class="flex-1 p-4 md:p-6">
+        <p v-if="!result" class="card px-4 py-8 text-center text-sm text-gray-500">
           먼저 '내역 가져오기'에서 파일을 불러오고 컬럼을 매핑하세요.
         </p>
+        <UnclassifiedQueue v-else-if="view === 'unclassified'" :groups="unclassified" @classify="onClassify" />
+        <MonthlySummary v-else :result="result" :categories="categories" :file-name="fileName" />
       </main>
 
       <main v-else class="flex-1 p-4 md:p-6">
