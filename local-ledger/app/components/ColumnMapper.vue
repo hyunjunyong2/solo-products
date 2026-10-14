@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { duplicateColumns } from '~/lib/mapRows'
 import type { Mapping } from '~/lib/types'
 
 defineProps<{ headers: string[]; rowCount: number }>()
 const mapping = defineModel<Mapping>({ required: true })
+const duplicates = computed(() => duplicateColumns(mapping.value))
 
 function setMode(mode: 'single' | 'split') {
   mapping.value.amount =
@@ -49,5 +51,9 @@ function setMode(mode: 'single' | 'split') {
       <ColumnSelect v-model="mapping.amount.inflow" label="입금" :headers="headers" />
       <ColumnSelect v-model="mapping.amount.outflow" label="출금" :headers="headers" />
     </template>
+
+    <p v-if="duplicates.length" role="alert" class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 sm:col-span-2">
+      {{ duplicates.map((c) => `${c + 1}열`).join(', ') }}을 여러 항목에 선택했습니다. 항목마다 다른 열을 고르세요.
+    </p>
   </div>
 </template>

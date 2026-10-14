@@ -2,9 +2,20 @@ import { parseAmount } from './parseAmount'
 import { parseDate } from './parseDate'
 import type { Grid, MappedResult, Mapping, Transaction } from './types'
 
+function mappedColumns(m: Mapping): number[] {
+  const amount = m.amount.mode === 'single' ? [m.amount.amount] : [m.amount.inflow, m.amount.outflow]
+  return [m.date, m.merchant, ...amount]
+}
+
+/** 두 항목 이상에 선택된 열 (0부터) */
+export function duplicateColumns(m: Mapping): number[] {
+  const cols = mappedColumns(m).filter((c) => c >= 0)
+  return [...new Set(cols.filter((c, i) => cols.indexOf(c) !== i))]
+}
+
+/** 모든 항목에 서로 다른 열이 선택됨 */
 export function isMappingComplete(m: Mapping): boolean {
-  const cols = m.amount.mode === 'single' ? [m.amount.amount] : [m.amount.inflow, m.amount.outflow]
-  return [m.date, m.merchant, ...cols].every((c) => c >= 0)
+  return mappedColumns(m).every((c) => c >= 0) && duplicateColumns(m).length === 0
 }
 
 function rowAmount(row: string[], m: Mapping): number | null {

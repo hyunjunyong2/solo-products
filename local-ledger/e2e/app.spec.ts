@@ -250,3 +250,19 @@ test('월별 요약: 2개월 CSV의 월별·분류별 합계, 원본 합계 없�
   await page.getByLabel('명세서 총액').fill('2971500')
   await expect(page.getByTestId('source-check')).toContainText('✅ 원본 합계 일치')
 })
+
+test('같은 열을 여러 항목에 고르면 경고, 표·매핑 저장 막힘', async ({ page }) => {
+  await page.goto('/')
+  await upload(page, 'card.xlsx')
+  for (const label of ['날짜', '가맹점', '금액']) {
+    await page.getByLabel(label, { exact: true }).selectOption({ label: '1열: 승인일' })
+  }
+  await expect(page.getByRole('alert')).toHaveText('1열을 여러 항목에 선택했습니다. 항목마다 다른 열을 고르세요.')
+  await expect(page.locator('tbody tr')).toHaveCount(0)
+  await page.getByLabel('프로필 이름').fill('잘못된 매핑')
+  await expect(page.getByRole('button', { name: '매핑 저장' })).toBeDisabled()
+
+  await mapSingle(page, 1, '1열: 승인일', '2열: 가맹점', '3열: 금액')
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await expectTable(page, 'card.xlsx')
+})
